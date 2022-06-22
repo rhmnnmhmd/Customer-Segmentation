@@ -29,64 +29,12 @@ from scipy import stats
 
 import pickle
 
+from modules import categorical_matrix_display, cramers_V, cramersVMatrix, categorical_countplots, create_model, plot_performance
+
 # # Statics
 MODEL_PATH = os.path.join(os.getcwd(), 'model', 'model.h5')
 log_dir = datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
 LOG_PATH = os.path.join(os.getcwd(), 'logs', log_dir)
-
-# # User-defined functions
-# plot correlation matrix using logistic regression
-def categorical_matrix_display(df, columns):
-    dim = len(columns)
-    array = np.zeros((dim, dim))          
-
-    for i, name1 in enumerate(columns):
-        for j, name2 in enumerate(columns):
-            logit = LogisticRegression()
-            logit.fit(df[name1].values.reshape(-1, 1), df[name2])
-            score = logit.score(df[name1].values.reshape(-1, 1), df[name2])
-            array[i, j] = score
-
-    arrayFrame = pd.DataFrame(data=array, columns=columns)
-    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-    sns.heatmap(arrayFrame, annot=True, ax=ax, yticklabels=columns, vmin=0, vmax=1)
-    # ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
-    plt.tight_layout()
-    plt.show()
-
-# function to calculate Cramer's V value
-def cramers_V(confusion_matrix):
-    """ calculate Cramers V statistic for categorial-categorial association.
-        uses correction from Bergsma and Wicher, 
-        Journal of the Korean Statistical Society 42 (2013): 323-328
-    """
-    chi2 = stats.chi2_contingency(confusion_matrix)[0]
-    n = confusion_matrix.sum()
-    phi2 = chi2/n
-    r, k = confusion_matrix.shape
-    phi2corr = max(0, phi2 - ((k-1)*(r-1))/(n-1))    
-    rcorr = r - ((r-1)**2)/(n-1)
-    kcorr = k - ((k-1)**2)/(n-1)
-    
-    return np.sqrt(phi2corr / min( (kcorr-1), (rcorr-1)))
-
-# plot correaltion matrix using the cramer's V values
-def cramersVMatrix(df, col):
-    len_cat = len(col)
-    array  = np.zeros((len_cat, len_cat))
-
-    for i, name1 in enumerate(col):
-        for j, name2 in enumerate(col):
-            cross_tab = pd.crosstab(df[name1], df[name2]).to_numpy()
-            value = cramers_V(cross_tab)
-            array[i, j] = value
-
-    array_frame = pd.DataFrame(data=array, columns=col)
-    fig, ax = plt.subplots(1, 1, figsize=(10, 10))
-    sns.heatmap(array_frame, annot=True, ax=ax, yticklabels=col, vmin=0, vmax=1)
-    # ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
-    plt.tight_layout()
-    plt.show()
 
 # # Data loading
 DATA_PATH = os.path.join(os.getcwd(), 'data', 'Train.csv')
@@ -139,27 +87,7 @@ df = df.dropna(axis=0, subset=['marital', 'personal_loan'])
 df.isnull().sum()
 
 # ### countplots for categorical features
-for i, col in enumerate(cat_cols):
-    
-    if col == 'job_type':
-        fig, ax = plt.subplots(1, 1, figsize=(10, 4))
-        ax = sns.countplot(x=df[col], order=df[col].value_counts(ascending=False).index)
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=30)
-        abs_values = df[col].value_counts(ascending=False)
-        rel_values = df[col].value_counts(ascending=False, normalize=True).values*100
-        lbls = [f'{p[0]} ({p[1]:.0f}%)' for p in zip(abs_values, rel_values)]
-        ax.bar_label(container=ax.containers[0], labels=lbls)
-        plt.tight_layout()
-        plt.show() 
-    else:
-        fig, ax = plt.subplots(1, 1, figsize=(10, 4))
-        ax = sns.countplot(x=df[col], order=df[col].value_counts(ascending=False).index)
-        abs_values = df[col].value_counts(ascending=False)
-        rel_values = df[col].value_counts(ascending=False, normalize=True).values*100
-        lbls = [f'{p[0]} ({p[1]:.0f}%)' for p in zip(abs_values, rel_values)]
-        ax.bar_label(container=ax.containers[0], labels=lbls)
-        plt.tight_layout()
-        plt.show()  
+categorical_countplots(df, cat_cols)
 
 # # Preprocessing
 # ## encode all categorical features using Ordinal encoder
@@ -168,7 +96,6 @@ df[cat_cols[0: -1]] = oe.fit_transform(df[cat_cols[0: -1]])
 
 # ## save the ordinal encoder
 OE_PATH = os.path.join(os.getcwd(), 'model', 'oe.pkl')
-
 with open(OE_PATH, 'wb') as file:
     pickle.dump(oe, file)
 
@@ -193,7 +120,6 @@ ohe.categories_
 
 # ### save the one hot encoder
 OHE_PATH = os.path.join(os.getcwd(), 'model', 'ohe.pkl')
-
 with open(OHE_PATH, 'wb') as file:
     pickle.dump(ohe, file)
 
@@ -209,28 +135,21 @@ y = df[['term_deposit_subscribed_no', 'term_deposit_subscribed_yes']]
 
 # # Train-test splitting
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-print(X_train)
-print(y_train)
 
 # # Deep learning
-# ## create the layers
-input_1 = Input(shape=(15,))
-
-dense_0 = Dense(units=16, activation='relu', kernel_initializer='lecun_normal')(input_1)
-dense_1 = Dense(units=32, activation='relu', kernel_initializer='lecun_normal')(dense_0)
-dense_2 = Dense(units=64, activation='relu', kernel_initializer='lecun_normal')(dense_1)
-dense_3 = Dense(units=128, activation='relu', kernel_initializer='lecun_normal')(dense_2)
-dense_4 = Dense(units=128, activation='relu', kernel_initializer='lecun_normal')(dense_3)
-dense_5 = Dense(units=64, activation='relu', kernel_initializer='lecun_normal')(dense_4)
-dense_6 = Dense(units=32, activation='relu', kernel_initializer='lecun_normal')(dense_5)
-dense_7 = Dense(units=16, activation='relu', kernel_initializer='lecun_normal')(dense_6)
-dense_8 = Dense(units=8, activation='relu', kernel_initializer='lecun_normal')(dense_7)
-dense_9 = Dense(units=4, activation='relu', kernel_initializer='lecun_normal')(dense_8)
-
-output_1 = Dense(units=2, activation='softmax')(dense_7)
-
 # ## create the Model object
-model = Model(inputs=input_1, outputs=output_1)
+input_shape = X_train.shape[-1]
+output_shape = y_train.shape[-1]
+model = create_model(input_shape=input_shape, 
+                     output_shape=output_shape, 
+                     act='relu', 
+                     kernel_init='lecun_normal', 
+                     n_pair_1=16, 
+                     n_pair_2=32, 
+                     n_pair_3=64, 
+                     n_pair_4=128, 
+                     n_odd_1=8, 
+                     n_odd_2=4)
 model.summary()
 
 # ## plot model
@@ -256,46 +175,24 @@ model_hist = model.fit(X_train,
 model.evaluate(X_test, y_test)
 
 # ## plot performance los/metrics against epochs
-train_loss = model_hist.history['loss']
-train_metric = model_hist.history['acc']
-test_loss = model_hist.history['val_loss']
-test_metric = model_hist.history['val_acc']
-
-fig, ax = plt.subplots(1, 2, figsize=(10, 5))
-
-fig.suptitle('Loss and Accuracy vs Epochs')
-
-ax[0].plot(train_loss, label='train')
-ax[0].plot(test_loss, label='test')
-ax[0].set_xlabel('epochs')
-ax[0].set_ylabel('loss')
-ax[0].legend()
-
-ax[1].plot(train_metric, label='train')
-ax[1].plot(test_metric, label='test')
-ax[1].set_xlabel('epochs')
-ax[1].set_ylabel('accuracy')
-ax[1].legend()
-
-plt.tight_layout()
-plt.show()
+plot_performance(model_hist)
 
 # # Tensorboard launching. type this in terminal
 # %load_ext tensorboard
 # %tensorboard --logdir logs
 
 # # Predictions and Metrics
-# ## predictions
+# ## predictions [gives binary value of 0 (not subscribed) or 1(subscribed)]
 y_pred = np.argmax(model.predict(X_test), axis=1)
 
-# the true labels
+# the true labels (also in the binary form either 0 or 1)
 y_true = ohe.inverse_transform(y_test)[:, 0]
 
 # ## classification report
 report = classification_report(y_true, y_pred, target_names=['not subscribed', 'subscribed'])
 print(report)
 
-# ## confusion matrix
+# ## plot confusion matrix
 fig, ax = plt.subplots(1, 1, figsize=(7, 7))
 ConfusionMatrixDisplay.from_predictions(y_true, y_pred, normalize='all', ax=ax, display_labels=['not subscribed', 'subscribed'])
 plt.tight_layout()
