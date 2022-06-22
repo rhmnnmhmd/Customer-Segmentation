@@ -6,24 +6,31 @@
 ![SciPy](https://img.shields.io/badge/SciPy-%230C55A5.svg?style=for-the-badge&logo=scipy&logoColor=%white)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-%23FF6F00.svg?style=for-the-badge&logo=TensorFlow&logoColor=white)
 
-# Project: Heart Attack Predictor
+# Project: Customer Segmentation/Classification
 
 # Description
-The project is about developing a web app for predicting whether an individual have a higher or lower chance of getting a heart attack. The web app are developed using Python's Streamlit library. For the predictive model, it is obtained by training a supervised machine learning classification model (Random Forest Classifier) on the [Heart Attack Analysis & Prediction Dataset](https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset?select=o2Saturation.csv). This dataset contains 300+ sample patients/individuals with their personal/medical details as the features.
+The project is about developing a deep learning model to predict the outcome of a marketing campaign based on the collected customer details e.g. age, job, marital status and many more. For the deep learning model, it is developed by training a dense neural network classification model on the [HackerEarth HackLive: Customer Segmentation Dataset](https://www.kaggle.com/datasets/kunalgupta2616/hackerearth-customer-segmentation-hackathon). The raw dataset contains 30,000+ sample of customer details (age, job, education, personal loan) where each customer have been binary-labelled to two categories, whether the customer subscribe or did not subscribe to the focus product of the marketing campaign i.e. Term Deposit.
 
 # How to Install and Run the Project
-To run the web app on a localhost web browser, download/clone the whole repository first. Then, proceed to the directory containin the cloned repository. In the terminal while also in this particular directory, execute `streamlit run app.py`. In a few seconds, the web app will automatically launch as a tab in your default browser.
-
-# How to Use the Web App Predictor
-The usage is quite simple. Just input your relevant details as prompted in the form in the web app. Then, submit the filled details and the app will show the prediction.
+To run the program on your own device, download/clone the whole repository first. Then, proceed to the directory containing the cloned repository. In this particular directory, locate the `customer_segmentation.py` and run this file in your terminal or any of your favorite IDEs. This will generate all the plots and results especially the trained neural network model.
 
 # Results
-## Developed app
-![app screenshot 1](statics/developed_app_1.png)
-![app screenshot 2](statics/developed_app_2.png)
+## Neural Network Model Plot
+![model neural network plot](statics/model.png)
+
+## Model Training/Test Loss and Metrics (Accuracy)
+### Matplotlib Plot
+![loss metrics plots mpl](statics/perf_vs_epochs.png)
+### Smoothed Tensorboard Plot
+![loss metrics plots tensoboard](statics/perf_vs_epochs_tensorboard.png)
+
+## Model Performance on The Test/Out-of-Sample Dataset
+### Classification Report
+![class report](statics/classification_report.png)
+### Confusion Matrix
+![confusion matrix](statics/confusion_matrix.png)
 
 # Credits
-- [Heart Attack Analysis & Prediction Dataset](https://www.kaggle.com/datasets/rashikrahmanpritom/heart-attack-analysis-prediction-dataset?select=o2Saturation.csv)
+- [HackerEarth HackLive: Customer Segmentation](https://www.kaggle.com/datasets/kunalgupta2616/hackerearth-customer-segmentation-hackathon)
 - [Markdown badges source 1](https://github.com/Ileriayo/markdown-badges)
 - [Markdown badges source 2](https://github.com/alexandresanlim/Badges4-README.md-Profile)
-- [Heart Disease Dataset](https://archive.ics.uci.edu/ml/datasets/Heart+Disease)
